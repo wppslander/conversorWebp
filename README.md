@@ -4,6 +4,15 @@ Utilitário em Go para conversão em lote de imagens `.webp` para `.png`.
 
 ---
 
+## Download dos Executáveis (Acesso Rápido)
+
+Você não precisa compilar nem instalar Go para usar. Baixe a versão correspondente ao seu sistema operacional:
+
+- 🪟 **[Download para Windows (conversorWebp.exe)](https://github.com/wppslander/conversorWebp/releases/latest/download/conversorWebp.exe)**
+- 🐧 **[Download para Linux (conversorWebp)](https://github.com/wppslander/conversorWebp/releases/latest/download/conversorWebp)**
+
+---
+
 ## Requisitos do Sistema
 
 - **Go (Golang)**: Versão 1.24 ou superior instalada na máquina.
