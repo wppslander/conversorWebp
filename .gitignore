@@ -1,0 +1,7 @@
+# Binários compilados
+conversorWebp
+conversorWebp.exe
+dist/
+
+# Pastas de trabalho local e imagens
+Fotos Produtos/

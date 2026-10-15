@@ -1,0 +1,42 @@
+name: Build Binaries
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Multiplataforma
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          check-latest: true
+
+      - name: Baixar dependências
+        run: go mod download
+
+      - name: Compilar para Windows (amd64)
+        run: |
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/conversorWebp.exe .
+
+      - name: Compilar para Linux (amd64)
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/conversorWebp .
+
+      - name: Upload dos binários como artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: conversorWebp-binarios
+          path: |
+            dist/conversorWebp.exe
+            dist/conversorWebp
