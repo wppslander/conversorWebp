@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/png"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/gen2brain/avif"
 	"golang.org/x/image/webp"
 )
 
@@ -23,6 +25,15 @@ func main() {
 	}
 }
 
+func isSupportedFormat(ext string) bool {
+	switch strings.ToLower(ext) {
+	case ".webp", ".avif":
+		return true
+	default:
+		return false
+	}
+}
+
 func run() error {
 	baseDir := targetFolder
 	info, err := os.Stat(baseDir)
@@ -31,7 +42,7 @@ func run() error {
 			if err := os.MkdirAll(baseDir, 0755); err != nil {
 				return fmt.Errorf("falha ao criar pasta '%s': %w", baseDir, err)
 			}
-			fmt.Printf("Pasta '%s' criada com sucesso.\nPor favor, coloque os arquivos .webp ali dentro e execute o programa novamente.\n", targetFolder)
+			fmt.Printf("Pasta '%s' criada com sucesso.\nPor favor, coloque os arquivos (.webp, .avif) ali dentro e execute o programa novamente.\n", targetFolder)
 			return nil
 		}
 		return fmt.Errorf("falha ao acessar '%s': %w", baseDir, err)
@@ -50,26 +61,26 @@ func run() error {
 		return fmt.Errorf("falha ao ler arquivos de '%s': %w", baseDir, err)
 	}
 
-	var webpFiles []string
+	var filesToConvert []string
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-		if strings.EqualFold(filepath.Ext(entry.Name()), ".webp") {
-			webpFiles = append(webpFiles, entry.Name())
+		if isSupportedFormat(filepath.Ext(entry.Name())) {
+			filesToConvert = append(filesToConvert, entry.Name())
 		}
 	}
 
-	if len(webpFiles) == 0 {
-		fmt.Println("Nenhum arquivo .webp encontrado para converter.")
+	if len(filesToConvert) == 0 {
+		fmt.Println("Nenhum arquivo (.webp, .avif) encontrado para converter.")
 		fmt.Println("Processo terminado.")
 		return nil
 	}
 
-	total := len(webpFiles)
+	total := len(filesToConvert)
 	successCount := 0
 
-	for i, fileName := range webpFiles {
+	for i, fileName := range filesToConvert {
 		srcPath := filepath.Join(baseDir, fileName)
 		baseName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
 		dstPngPath := filepath.Join(baseDir, baseName+".png")
@@ -77,7 +88,7 @@ func run() error {
 
 		fmt.Printf("[%d/%d] Convertendo: %s -> %s\n", i+1, total, fileName, filepath.Base(dstPngPath))
 
-		if err := convertWebpToPng(srcPath, dstPngPath); err != nil {
+		if err := convertImageToPng(srcPath, dstPngPath); err != nil {
 			fmt.Fprintf(os.Stderr, "  Falha ao converter %s: %v\n", fileName, err)
 			continue
 		}
@@ -95,16 +106,25 @@ func run() error {
 	return nil
 }
 
-func convertWebpToPng(srcPath, dstPath string) error {
+func convertImageToPng(srcPath, dstPath string) error {
 	srcFile, err := os.Open(srcPath)
 	if err != nil {
 		return fmt.Errorf("não foi possível abrir o arquivo de origem: %w", err)
 	}
 	defer srcFile.Close()
 
-	img, err := webp.Decode(srcFile)
+	ext := strings.ToLower(filepath.Ext(srcPath))
+	var img image.Image
+	switch ext {
+	case ".webp":
+		img, err = webp.Decode(srcFile)
+	case ".avif":
+		img, err = avif.Decode(srcFile)
+	default:
+		return fmt.Errorf("formato não suportado: %s", ext)
+	}
 	if err != nil {
-		return fmt.Errorf("falha na decodificação webp: %w", err)
+		return fmt.Errorf("falha na decodificação %s: %w", ext, err)
 	}
 
 	dstFile, err := os.Create(dstPath)
