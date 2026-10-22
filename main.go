@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"image"
 	"image/png"
@@ -19,9 +20,17 @@ const (
 )
 
 func main() {
+	var exitCode int
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Erro: %v\n", err)
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "\nErro: %v\n", err)
+		exitCode = 1
+	}
+
+	fmt.Println("\nPressione Enter para sair...")
+	_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+
+	if exitCode != 0 {
+		os.Exit(exitCode)
 	}
 }
 
